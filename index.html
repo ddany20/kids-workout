@@ -231,6 +231,14 @@
     border-radius: 3px;
     margin-bottom: 0.6rem;
   }
+
+  /* Count exercise screen */
+  .count-target {
+    font-size: 6rem;
+    font-weight: 800;
+    margin: 0.5rem 0;
+    direction: ltr;
+  }
 </style>
 </head>
 <body>
@@ -253,6 +261,7 @@
   <div class="selector-group">
     <label>משך סבב</label>
     <div class="options" id="duration-options">
+      <button data-val="10">10 שנ׳</button>
       <button data-val="30">30 שנ׳</button>
       <button data-val="45" class="selected">45 שנ׳</button>
       <button data-val="60">60 שנ׳</button>
@@ -272,7 +281,29 @@
   </div>
 
   <div class="selector-group">
-    <label>תרגילים</label>
+    <label>שכיבות סמיכה</label>
+    <div class="options" id="pushup-options">
+      <button data-val="0" class="selected">ללא</button>
+      <button data-val="5">5</button>
+      <button data-val="10">10</button>
+      <button data-val="15">15</button>
+      <button data-val="20">20</button>
+    </div>
+  </div>
+
+  <div class="selector-group">
+    <label>קפיצות</label>
+    <div class="options" id="jumping-options">
+      <button data-val="0" class="selected">ללא</button>
+      <button data-val="10">10</button>
+      <button data-val="15">15</button>
+      <button data-val="20">20</button>
+      <button data-val="30">30</button>
+    </div>
+  </div>
+
+  <div class="selector-group">
+    <label>תרגילים מתוזמנים</label>
     <div class="exercise-list">מתח<br>לוח שיווי משקל</div>
   </div>
 
@@ -297,6 +328,16 @@
   <div class="get-ready" id="getready-count">3</div>
 </div>
 
+<!-- Screen 3c: Count Exercise -->
+<div id="screen-count" class="screen">
+  <div class="player-color-bar" id="count-color-bar"></div>
+  <div class="current-player-name" id="count-player"></div>
+  <div class="timer-info" id="count-round"></div>
+  <div class="exercise-name" id="count-exercise"></div>
+  <div class="count-target" id="count-target">10</div>
+  <button class="btn green" id="btn-count-done">סיימתי!</button>
+</div>
+
 <!-- Screen 4: Done -->
 <div id="screen-done" class="screen">
   <div class="celebration">🎉</div>
@@ -309,13 +350,16 @@
 </div>
 
 <script>
-  const exercises = ['מתח', 'לוח שיווי משקל'];
+  const timedExercises = ['מתח', 'לוח שיווי משקל'];
   const playerColors = ['#ff6b6b','#feca57','#48dbfb','#ff9ff3','#54a0ff','#5f27cd','#01a3a4','#f368e0'];
   let players = [];
   let roundDuration = 45;
   let totalRounds = 3;
+  let pushupCount = 0;
+  let jumpingCount = 0;
   let timerId = null;
   let workoutStartTime = null;
+  let countDoneCb = null;
 
   // Audio beep using Web Audio API
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -393,6 +437,8 @@
 
   setupSelector('duration-options', v => { roundDuration = v; });
   setupSelector('rounds-options', v => { totalRounds = v; });
+  setupSelector('pushup-options', v => { pushupCount = v; });
+  setupSelector('jumping-options', v => { jumpingCount = v; });
 
   // Screen 1 → 2
   document.getElementById('btn-start').addEventListener('click', () => {
@@ -415,6 +461,17 @@
     show('screen-login');
   });
 
+  // Build exercise list for a round based on settings
+  function buildExercises() {
+    const list = [];
+    if (pushupCount > 0) list.push({ name: 'שכיבות סמיכה', type: 'count', count: pushupCount });
+    if (jumpingCount > 0) list.push({ name: 'קפיצות', type: 'count', count: jumpingCount });
+    for (const ex of timedExercises) {
+      list.push({ name: ex, type: 'timed' });
+    }
+    return list;
+  }
+
   // Workout logic — alternates players for each exercise slot
   function startWorkout() {
     workoutStartTime = Date.now();
@@ -422,29 +479,36 @@
   }
 
   function runSequence(roundIdx, exIdx, playerIdx) {
+    const exercises = buildExercises();
+    if (exercises.length === 0) return finishWorkout();
     if (roundIdx >= totalRounds) return finishWorkout();
 
     const player = players[playerIdx];
     const color = getPlayerColor(playerIdx);
-    const exerciseName = exercises[exIdx];
+    const ex = exercises[exIdx];
     const isFirst = roundIdx === 0 && exIdx === 0 && playerIdx === 0;
-    const label = isFirst ? 'היכון!' : `הבא: ${exerciseName}`;
+    const label = isFirst ? 'היכון!' : `הבא: ${ex.name}`;
+
+    const advance = () => {
+      const nextPlayer = playerIdx + 1;
+      if (nextPlayer < players.length) {
+        runSequence(roundIdx, exIdx, nextPlayer);
+      } else {
+        const nextEx = exIdx + 1;
+        if (nextEx < exercises.length) {
+          runSequence(roundIdx, nextEx, 0);
+        } else {
+          runSequence(roundIdx + 1, 0, 0);
+        }
+      }
+    };
 
     showGetReady(label, player, color, 3, () => {
-      runTimer(roundIdx, exIdx, playerIdx, () => {
-        beep();
-        const nextPlayer = playerIdx + 1;
-        if (nextPlayer < players.length) {
-          runSequence(roundIdx, exIdx, nextPlayer);
-        } else {
-          const nextEx = exIdx + 1;
-          if (nextEx < exercises.length) {
-            runSequence(roundIdx, nextEx, 0);
-          } else {
-            runSequence(roundIdx + 1, 0, 0);
-          }
-        }
-      });
+      if (ex.type === 'count') {
+        runCountExercise(roundIdx, exIdx, playerIdx, exercises, () => { beep(); advance(); });
+      } else {
+        runTimer(roundIdx, exIdx, playerIdx, exercises, () => { beep(); advance(); });
+      }
     });
   }
 
@@ -468,9 +532,28 @@
     }, 1000);
   }
 
-  function runTimer(roundIdx, exIdx, playerIdx, cb) {
+  function runCountExercise(roundIdx, exIdx, playerIdx, exercises, cb) {
     const player = players[playerIdx];
     const color = getPlayerColor(playerIdx);
+    const ex = exercises[exIdx];
+    show('screen-count');
+    document.getElementById('count-player').textContent = player;
+    document.getElementById('count-player').style.color = color;
+    document.getElementById('count-color-bar').style.background = color;
+    document.getElementById('count-round').textContent = `סבב ${roundIdx + 1} מתוך ${totalRounds}`;
+    document.getElementById('count-exercise').textContent = ex.name;
+    document.getElementById('count-target').textContent = ex.count;
+    countDoneCb = cb;
+  }
+
+  document.getElementById('btn-count-done').addEventListener('click', () => {
+    if (countDoneCb) { const cb = countDoneCb; countDoneCb = null; cb(); }
+  });
+
+  function runTimer(roundIdx, exIdx, playerIdx, exercises, cb) {
+    const player = players[playerIdx];
+    const color = getPlayerColor(playerIdx);
+    const ex = exercises[exIdx];
     show('screen-timer');
     document.getElementById('timer-name').textContent = player;
     document.getElementById('timer-name').style.color = color;
@@ -480,7 +563,7 @@
       players.length > 1
         ? `תרגיל ${exIdx + 1} מתוך ${exercises.length} · שחקן ${playerIdx + 1} מתוך ${players.length}`
         : `תרגיל ${exIdx + 1} מתוך ${exercises.length}`;
-    document.getElementById('timer-exercise').textContent = exercises[exIdx];
+    document.getElementById('timer-exercise').textContent = ex.name;
 
     let remaining = roundDuration;
     updateTimerUI(remaining);
@@ -515,7 +598,7 @@
     document.getElementById('done-summary').innerHTML =
       `שחקנים: ${players.length}<br>` +
       `סבבים שהושלמו: ${totalRounds}<br>` +
-      `תרגילים בכל סבב: ${exercises.length}<br>` +
+      `תרגילים בכל סבב: ${buildExercises().length}<br>` +
       `זמן כולל: ${timeStr}`;
     show('screen-done');
     beep();
