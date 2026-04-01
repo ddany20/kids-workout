@@ -10,6 +10,7 @@
   body {
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -24,10 +25,14 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
-    padding: 2rem;
+    padding: 1.5rem 1.5rem 1rem;
     width: 100%;
     max-width: 480px;
+    max-height: 100vh;
+    max-height: 100dvh;
+    overflow-y: auto;
     animation: fadeIn 0.4s ease;
+    -webkit-overflow-scrolling: touch;
   }
   .screen.active { display: flex; }
 
@@ -45,18 +50,18 @@
   }
 
   h1 {
-    font-size: 3rem;
-    margin-bottom: 1.5rem;
+    font-size: 2.6rem;
+    margin-bottom: 1rem;
     text-shadow: 3px 3px 6px rgba(0,0,0,0.25);
   }
   h2 {
-    font-size: 2rem;
-    margin-bottom: 1rem;
+    font-size: 1.8rem;
+    margin-bottom: 0.8rem;
   }
 
   input[type="text"] {
-    font-size: 1.4rem;
-    padding: 0.8rem 1.2rem;
+    font-size: 1.3rem;
+    padding: 0.7rem 1rem;
     border: none;
     border-radius: 16px;
     width: 100%;
@@ -67,17 +72,18 @@
   }
 
   .btn {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     font-weight: 700;
-    padding: 0.9rem 2.4rem;
+    padding: 0.8rem 2rem;
     border: none;
     border-radius: 50px;
     cursor: pointer;
-    margin-top: 1.2rem;
+    margin-top: 0.8rem;
     color: #fff;
     background: linear-gradient(135deg, #f857a6, #ff5858);
     box-shadow: 0 4px 15px rgba(0,0,0,0.25);
     transition: transform 0.15s, box-shadow 0.15s;
+    flex-shrink: 0;
   }
   .btn:active { transform: scale(0.96); }
   .btn:hover  { box-shadow: 0 6px 20px rgba(0,0,0,0.35); }
@@ -90,7 +96,7 @@
     flex-wrap: wrap;
     gap: 0.5rem;
     justify-content: center;
-    margin: 1rem 0;
+    margin: 0.8rem 0;
     width: 100%;
     max-width: 360px;
   }
@@ -146,12 +152,12 @@
   }
 
   /* Setup selectors */
-  .selector-group { margin: 1rem 0; width: 100%; max-width: 360px; }
-  .selector-group label { display: block; font-size: 1.1rem; margin-bottom: 0.5rem; font-weight: 600; }
-  .options { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
+  .selector-group { margin: 0.7rem 0; width: 100%; max-width: 360px; }
+  .selector-group label { display: block; font-size: 1rem; margin-bottom: 0.4rem; font-weight: 600; }
+  .options { display: flex; gap: 0.4rem; justify-content: center; flex-wrap: wrap; }
   .options button {
-    font-size: 1.1rem;
-    padding: 0.6rem 1.2rem;
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
     border: 3px solid rgba(255,255,255,0.5);
     border-radius: 14px;
     background: rgba(255,255,255,0.15);
@@ -165,10 +171,81 @@
     border-color: #fff;
   }
 
-  .exercise-list {
-    margin: 1rem 0;
-    font-size: 1.15rem;
-    line-height: 2;
+  /* Exercise toggle cards */
+  .exercise-toggles {
+    width: 100%;
+    max-width: 360px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0.5rem 0;
+  }
+  .exercise-card {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: rgba(255,255,255,0.12);
+    border: 3px solid rgba(255,255,255,0.3);
+    border-radius: 14px;
+    padding: 0.6rem 0.8rem;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+    user-select: none;
+  }
+  .exercise-card.active {
+    background: rgba(255,255,255,0.3);
+    border-color: #43e97b;
+  }
+  .exercise-card .ex-toggle {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: 2px solid rgba(255,255,255,0.5);
+    background: rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .exercise-card.active .ex-toggle {
+    background: #43e97b;
+    border-color: #43e97b;
+    color: #1a1a2e;
+  }
+  .exercise-card .ex-name {
+    font-size: 1.05rem;
+    font-weight: 600;
+    flex: 1;
+    text-align: right;
+  }
+  .exercise-card .ex-count-selector {
+    display: none;
+    gap: 0.3rem;
+    align-items: center;
+  }
+  .exercise-card.active .ex-count-selector.has-count { display: flex; }
+  .ex-count-selector button {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.3);
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .ex-count-selector .ex-count-val {
+    font-size: 1.1rem;
+    font-weight: 700;
+    min-width: 2rem;
+    text-align: center;
+    direction: ltr;
   }
 
   /* Timer screen */
@@ -259,7 +336,7 @@
   <h2 id="welcome-msg">ברוכים הבאים!</h2>
 
   <div class="selector-group">
-    <label>משך סבב</label>
+    <label>משך תרגיל מתוזמן</label>
     <div class="options" id="duration-options">
       <button data-val="10">10 שנ׳</button>
       <button data-val="30">30 שנ׳</button>
@@ -281,30 +358,8 @@
   </div>
 
   <div class="selector-group">
-    <label>שכיבות סמיכה</label>
-    <div class="options" id="pushup-options">
-      <button data-val="0" class="selected">ללא</button>
-      <button data-val="5">5</button>
-      <button data-val="10">10</button>
-      <button data-val="15">15</button>
-      <button data-val="20">20</button>
-    </div>
-  </div>
-
-  <div class="selector-group">
-    <label>קפיצות</label>
-    <div class="options" id="jumping-options">
-      <button data-val="0" class="selected">ללא</button>
-      <button data-val="10">10</button>
-      <button data-val="15">15</button>
-      <button data-val="20">20</button>
-      <button data-val="30">30</button>
-    </div>
-  </div>
-
-  <div class="selector-group">
-    <label>תרגילים מתוזמנים</label>
-    <div class="exercise-list">מתח<br>לוח שיווי משקל</div>
+    <label>תרגילים</label>
+    <div class="exercise-toggles" id="exercise-toggles"></div>
   </div>
 
   <button class="btn" id="btn-go">התחילו אימון!</button>
@@ -350,18 +405,32 @@
 </div>
 
 <script>
-  const timedExercises = ['מתח', 'לוח שיווי משקל'];
+  // All available exercises
+  const allExercises = [
+    { id: 'pullups',      name: 'מתח',             type: 'timed' },
+    { id: 'balance',      name: 'לוח שיווי משקל',  type: 'timed' },
+    { id: 'pushups',      name: 'שכיבות סמיכה',    type: 'count', defaultCount: 10, step: 5, min: 5, max: 30 },
+    { id: 'jumping',      name: 'קפיצות',          type: 'count', defaultCount: 15, step: 5, min: 5, max: 50 },
+    { id: 'situps',       name: 'כפיפות בטן',      type: 'count', defaultCount: 10, step: 5, min: 5, max: 30 },
+    { id: 'jumpingjacks', name: 'ג׳מפינג ג׳ק',    type: 'count', defaultCount: 15, step: 5, min: 5, max: 50 },
+    { id: 'squats',       name: 'סקוואטים',        type: 'count', defaultCount: 10, step: 5, min: 5, max: 30 },
+  ];
+
+  // State: which exercises are enabled and their counts
+  const exerciseState = {};
+  allExercises.forEach(ex => {
+    exerciseState[ex.id] = { enabled: true, count: ex.defaultCount || 0 };
+  });
+
   const playerColors = ['#ff6b6b','#feca57','#48dbfb','#ff9ff3','#54a0ff','#5f27cd','#01a3a4','#f368e0'];
   let players = [];
   let roundDuration = 45;
   let totalRounds = 3;
-  let pushupCount = 0;
-  let jumpingCount = 0;
   let timerId = null;
   let workoutStartTime = null;
   let countDoneCb = null;
 
-  // Audio beep using Web Audio API
+  // Audio beep
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
   let audioCtx = null;
   function beep() {
@@ -381,11 +450,63 @@
     return playerColors[idx % playerColors.length];
   }
 
-  // Screen management
   function show(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
   }
+
+  // Render exercise toggle cards
+  function renderExerciseToggles() {
+    const container = document.getElementById('exercise-toggles');
+    container.innerHTML = '';
+    allExercises.forEach(ex => {
+      const state = exerciseState[ex.id];
+      const card = document.createElement('div');
+      card.className = 'exercise-card' + (state.enabled ? ' active' : '');
+      card.dataset.id = ex.id;
+
+      let countHtml = '';
+      if (ex.type === 'count') {
+        countHtml = `<div class="ex-count-selector has-count">
+          <button class="ex-minus" data-id="${ex.id}">-</button>
+          <span class="ex-count-val">${state.count}</span>
+          <button class="ex-plus" data-id="${ex.id}">+</button>
+        </div>`;
+      }
+
+      card.innerHTML = `
+        <div class="ex-toggle">${state.enabled ? '✓' : ''}</div>
+        <span class="ex-name">${ex.name}</span>
+        ${countHtml}
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  // Handle exercise toggle clicks
+  document.getElementById('exercise-toggles').addEventListener('click', e => {
+    const minusBtn = e.target.closest('.ex-minus');
+    const plusBtn = e.target.closest('.ex-plus');
+
+    if (minusBtn || plusBtn) {
+      e.stopPropagation();
+      const id = (minusBtn || plusBtn).dataset.id;
+      const ex = allExercises.find(x => x.id === id);
+      const state = exerciseState[id];
+      if (minusBtn && state.count > ex.min) state.count -= ex.step;
+      if (plusBtn && state.count < ex.max) state.count += ex.step;
+      renderExerciseToggles();
+      return;
+    }
+
+    const card = e.target.closest('.exercise-card');
+    if (!card) return;
+    const id = card.dataset.id;
+    exerciseState[id].enabled = !exerciseState[id].enabled;
+    renderExerciseToggles();
+  });
+
+  renderExerciseToggles();
 
   // Player management
   function renderPlayers() {
@@ -437,8 +558,6 @@
 
   setupSelector('duration-options', v => { roundDuration = v; });
   setupSelector('rounds-options', v => { totalRounds = v; });
-  setupSelector('pushup-options', v => { pushupCount = v; });
-  setupSelector('jumping-options', v => { jumpingCount = v; });
 
   // Screen 1 → 2
   document.getElementById('btn-start').addEventListener('click', () => {
@@ -461,26 +580,30 @@
     show('screen-login');
   });
 
-  // Build exercise list for a round based on settings
+  // Build exercise list from toggle state
   function buildExercises() {
     const list = [];
-    if (pushupCount > 0) list.push({ name: 'שכיבות סמיכה', type: 'count', count: pushupCount });
-    if (jumpingCount > 0) list.push({ name: 'קפיצות', type: 'count', count: jumpingCount });
-    for (const ex of timedExercises) {
-      list.push({ name: ex, type: 'timed' });
-    }
+    allExercises.forEach(ex => {
+      const state = exerciseState[ex.id];
+      if (!state.enabled) return;
+      if (ex.type === 'count') {
+        list.push({ name: ex.name, type: 'count', count: state.count });
+      } else {
+        list.push({ name: ex.name, type: 'timed' });
+      }
+    });
     return list;
   }
 
-  // Workout logic — alternates players for each exercise slot
   function startWorkout() {
+    const exercises = buildExercises();
+    if (exercises.length === 0) return;
     workoutStartTime = Date.now();
     runSequence(0, 0, 0);
   }
 
   function runSequence(roundIdx, exIdx, playerIdx) {
     const exercises = buildExercises();
-    if (exercises.length === 0) return finishWorkout();
     if (roundIdx >= totalRounds) return finishWorkout();
 
     const player = players[playerIdx];
@@ -591,7 +714,7 @@
     const elapsed = Math.round((Date.now() - workoutStartTime) / 1000);
     const mins = Math.floor(elapsed / 60);
     const secs = elapsed % 60;
-    const timeStr = mins > 0 ? `דק׳ ${mins} ו-${secs} שנ׳` : `${secs} שנ׳`;
+    const timeStr = mins > 0 ? `${mins} דק׳ ו-${secs} שנ׳` : `${secs} שנ׳`;
 
     const names = players.join(' ו-');
     document.getElementById('done-msg').textContent = `כל הכבוד, ${names}!`;
