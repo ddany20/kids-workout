@@ -2,7 +2,7 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>אימון ילדים!</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -12,12 +12,13 @@
     min-height: 100vh;
     min-height: 100dvh;
     display: flex;
-    align-items: center;
+    align-items: safe center;
     justify-content: center;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: #fff;
     overflow: hidden;
     direction: rtl;
+    padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
   }
 
   .screen {
@@ -25,7 +26,7 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
-    padding: 1.5rem 1.5rem 1rem;
+    padding: 1.5rem 1.5rem calc(1rem + env(safe-area-inset-bottom, 0px));
     width: 100%;
     max-width: 480px;
     max-height: 100vh;
@@ -374,6 +375,7 @@
   <div class="exercise-name" id="timer-exercise"></div>
   <div class="timer-display" id="timer-display">0</div>
   <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill"></div></div>
+  <button class="btn blue" id="btn-timer-skip">דלג</button>
 </div>
 
 <!-- Screen 3b: Get Ready -->
@@ -429,6 +431,7 @@
   let timerId = null;
   let workoutStartTime = null;
   let countDoneCb = null;
+  let timerSkipCb = null;
 
   // Audio beep
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -673,11 +676,16 @@
     if (countDoneCb) { const cb = countDoneCb; countDoneCb = null; cb(); }
   });
 
+  document.getElementById('btn-timer-skip').addEventListener('click', () => {
+    if (timerSkipCb) { clearInterval(timerId); const cb = timerSkipCb; timerSkipCb = null; beep(); cb(); }
+  });
+
   function runTimer(roundIdx, exIdx, playerIdx, exercises, cb) {
     const player = players[playerIdx];
     const color = getPlayerColor(playerIdx);
     const ex = exercises[exIdx];
     show('screen-timer');
+    timerSkipCb = cb;
     document.getElementById('timer-name').textContent = player;
     document.getElementById('timer-name').style.color = color;
     document.getElementById('player-color-bar').style.background = color;
