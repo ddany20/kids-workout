@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>אימון ילדים!</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    overflow: hidden;
+    direction: rtl;
+  }
+
+  .screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 2rem;
+    width: 100%;
+    max-width: 480px;
+    animation: fadeIn 0.4s ease;
+  }
+  .screen.active { display: flex; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.06); }
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-12px); }
+  }
+
+  h1 {
+    font-size: 3rem;
+    margin-bottom: 1.5rem;
+    text-shadow: 3px 3px 6px rgba(0,0,0,0.25);
+  }
+  h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  input[type="text"] {
+    font-size: 1.4rem;
+    padding: 0.8rem 1.2rem;
+    border: none;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 320px;
+    text-align: center;
+    outline: none;
+    color: #333;
+  }
+
+  .btn {
+    font-size: 1.3rem;
+    font-weight: 700;
+    padding: 0.9rem 2.4rem;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    margin-top: 1.2rem;
+    color: #fff;
+    background: linear-gradient(135deg, #f857a6, #ff5858);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .btn:active { transform: scale(0.96); }
+  .btn:hover  { box-shadow: 0 6px 20px rgba(0,0,0,0.35); }
+  .btn.green  { background: linear-gradient(135deg, #43e97b, #38f9d7); color: #1a1a2e; }
+  .btn.blue   { background: linear-gradient(135deg, #4facfe, #00f2fe); color: #1a1a2e; }
+
+  /* Player list */
+  .player-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    margin: 1rem 0;
+    width: 100%;
+    max-width: 360px;
+  }
+  .player-tag {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(255,255,255,0.25);
+    border: 2px solid rgba(255,255,255,0.5);
+    border-radius: 50px;
+    padding: 0.4rem 1rem 0.4rem 0.6rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+  .player-tag .remove-player {
+    background: rgba(255,255,255,0.3);
+    border: none;
+    color: #fff;
+    border-radius: 50%;
+    width: 26px;
+    height: 26px;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+  .player-tag .remove-player:hover { background: rgba(255,80,80,0.6); }
+  .add-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    width: 100%;
+    max-width: 320px;
+  }
+  .add-row input { flex: 1; }
+  .btn-add {
+    font-size: 1.6rem;
+    font-weight: 700;
+    width: 48px;
+    height: 48px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    color: #1a1a2e;
+    background: linear-gradient(135deg, #43e97b, #38f9d7);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  /* Setup selectors */
+  .selector-group { margin: 1rem 0; width: 100%; max-width: 360px; }
+  .selector-group label { display: block; font-size: 1.1rem; margin-bottom: 0.5rem; font-weight: 600; }
+  .options { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
+  .options button {
+    font-size: 1.1rem;
+    padding: 0.6rem 1.2rem;
+    border: 3px solid rgba(255,255,255,0.5);
+    border-radius: 14px;
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .options button.selected {
+    background: rgba(255,255,255,0.35);
+    border-color: #fff;
+  }
+
+  .exercise-list {
+    margin: 1rem 0;
+    font-size: 1.15rem;
+    line-height: 2;
+  }
+
+  /* Timer screen */
+  .timer-info { font-size: 1.1rem; opacity: 0.9; margin-bottom: 0.3rem; }
+  .current-player-name {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 0.2rem;
+  }
+  .exercise-name {
+    font-size: 2.6rem;
+    font-weight: 800;
+    margin: 0.6rem 0;
+    animation: bounce 1s ease infinite;
+  }
+  .timer-display {
+    font-size: 7rem;
+    font-weight: 800;
+    line-height: 1;
+    margin: 0.8rem 0;
+    font-variant-numeric: tabular-nums;
+    direction: ltr;
+  }
+  .timer-display.warning { color: #ff5858; animation: pulse 0.5s ease infinite; }
+  .progress-bar-bg {
+    width: 100%;
+    max-width: 340px;
+    height: 14px;
+    background: rgba(255,255,255,0.25);
+    border-radius: 7px;
+    margin-top: 1rem;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #43e97b, #38f9d7);
+    border-radius: 7px;
+    transition: width 0.3s;
+  }
+
+  /* Get-ready overlay */
+  .get-ready {
+    font-size: 5rem;
+    font-weight: 800;
+    animation: pulse 0.6s ease infinite;
+  }
+  .get-ready-label { font-size: 1.4rem; margin-bottom: 0.5rem; }
+  .get-ready-player { font-size: 2.2rem; font-weight: 800; margin-bottom: 0.3rem; }
+
+  /* Done screen */
+  .celebration { font-size: 4rem; margin-bottom: 0.5rem; }
+  .summary { font-size: 1.15rem; opacity: 0.9; line-height: 1.8; margin: 1rem 0; }
+  .btn-row { display: flex; gap: 0.8rem; flex-wrap: wrap; justify-content: center; }
+
+  /* Player color band on timer */
+  .player-color-bar {
+    width: 100%;
+    max-width: 340px;
+    height: 6px;
+    border-radius: 3px;
+    margin-bottom: 0.6rem;
+  }
+</style>
+</head>
+<body>
+
+<!-- Screen 1: Players -->
+<div id="screen-login" class="screen active">
+  <h1>אימון ילדים!</h1>
+  <div class="add-row">
+    <input type="text" id="name-input" placeholder="הכניסו שם" autofocus>
+    <button class="btn-add" id="btn-add" title="הוסף שחקן">+</button>
+  </div>
+  <div class="player-list" id="player-list"></div>
+  <button class="btn green" id="btn-start" style="display:none">יאללה!</button>
+</div>
+
+<!-- Screen 2: Setup -->
+<div id="screen-setup" class="screen">
+  <h2 id="welcome-msg">ברוכים הבאים!</h2>
+
+  <div class="selector-group">
+    <label>משך סבב</label>
+    <div class="options" id="duration-options">
+      <button data-val="30">30 שנ׳</button>
+      <button data-val="45" class="selected">45 שנ׳</button>
+      <button data-val="60">60 שנ׳</button>
+      <button data-val="90">90 שנ׳</button>
+    </div>
+  </div>
+
+  <div class="selector-group">
+    <label>מספר סבבים</label>
+    <div class="options" id="rounds-options">
+      <button data-val="1">1</button>
+      <button data-val="2">2</button>
+      <button data-val="3" class="selected">3</button>
+      <button data-val="4">4</button>
+      <button data-val="5">5</button>
+    </div>
+  </div>
+
+  <div class="selector-group">
+    <label>תרגילים</label>
+    <div class="exercise-list">מתח<br>לוח שיווי משקל</div>
+  </div>
+
+  <button class="btn" id="btn-go">התחילו אימון!</button>
+</div>
+
+<!-- Screen 3: Workout Timer -->
+<div id="screen-timer" class="screen">
+  <div class="player-color-bar" id="player-color-bar"></div>
+  <div class="current-player-name" id="timer-name"></div>
+  <div class="timer-info" id="timer-round"></div>
+  <div class="timer-info" id="timer-exercise-progress"></div>
+  <div class="exercise-name" id="timer-exercise"></div>
+  <div class="timer-display" id="timer-display">0</div>
+  <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill"></div></div>
+</div>
+
+<!-- Screen 3b: Get Ready -->
+<div id="screen-getready" class="screen">
+  <div class="get-ready-player" id="getready-player"></div>
+  <div class="get-ready-label" id="getready-label">היכון!</div>
+  <div class="get-ready" id="getready-count">3</div>
+</div>
+
+<!-- Screen 4: Done -->
+<div id="screen-done" class="screen">
+  <div class="celebration">🎉</div>
+  <h1 id="done-msg">כל הכבוד!</h1>
+  <div class="summary" id="done-summary"></div>
+  <div class="btn-row">
+    <button class="btn green" id="btn-again">אימון נוסף</button>
+    <button class="btn blue" id="btn-change">החלף שחקנים</button>
+  </div>
+</div>
+
+<script>
+  const exercises = ['מתח', 'לוח שיווי משקל'];
+  const playerColors = ['#ff6b6b','#feca57','#48dbfb','#ff9ff3','#54a0ff','#5f27cd','#01a3a4','#f368e0'];
+  let players = [];
+  let roundDuration = 45;
+  let totalRounds = 3;
+  let timerId = null;
+  let workoutStartTime = null;
+
+  // Audio beep using Web Audio API
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  let audioCtx = null;
+  function beep() {
+    if (!audioCtx) audioCtx = new AudioCtx();
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.connect(g);
+    g.connect(audioCtx.destination);
+    o.type = 'square';
+    o.frequency.value = 880;
+    g.gain.value = 0.3;
+    o.start();
+    o.stop(audioCtx.currentTime + 0.15);
+  }
+
+  function getPlayerColor(idx) {
+    return playerColors[idx % playerColors.length];
+  }
+
+  // Screen management
+  function show(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  // Player management
+  function renderPlayers() {
+    const list = document.getElementById('player-list');
+    list.innerHTML = '';
+    players.forEach((name, i) => {
+      const tag = document.createElement('div');
+      tag.className = 'player-tag';
+      tag.style.borderColor = getPlayerColor(i);
+      tag.innerHTML = `<span>${name}</span><button class="remove-player" data-idx="${i}">&times;</button>`;
+      list.appendChild(tag);
+    });
+    document.getElementById('btn-start').style.display = players.length > 0 ? '' : 'none';
+  }
+
+  function addPlayer() {
+    const input = document.getElementById('name-input');
+    const name = input.value.trim();
+    if (!name) return input.focus();
+    if (players.length >= 8) return;
+    players.push(name);
+    input.value = '';
+    input.focus();
+    renderPlayers();
+  }
+
+  document.getElementById('btn-add').addEventListener('click', addPlayer);
+  document.getElementById('name-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addPlayer();
+  });
+  document.getElementById('player-list').addEventListener('click', e => {
+    const btn = e.target.closest('.remove-player');
+    if (!btn) return;
+    players.splice(Number(btn.dataset.idx), 1);
+    renderPlayers();
+  });
+
+  // Selector helpers
+  function setupSelector(containerId, onChange) {
+    const el = document.getElementById(containerId);
+    el.addEventListener('click', e => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      el.querySelectorAll('button').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      onChange(Number(btn.dataset.val));
+    });
+  }
+
+  setupSelector('duration-options', v => { roundDuration = v; });
+  setupSelector('rounds-options', v => { totalRounds = v; });
+
+  // Screen 1 → 2
+  document.getElementById('btn-start').addEventListener('click', () => {
+    if (players.length === 0) return;
+    const names = players.join(', ');
+    document.getElementById('welcome-msg').textContent =
+      players.length === 1 ? `ברוכים הבאים, ${players[0]}!` : `ברוכים הבאים, ${names}!`;
+    show('screen-setup');
+  });
+
+  // Screen 2 → 3
+  document.getElementById('btn-go').addEventListener('click', startWorkout);
+
+  // Screen 4 buttons
+  document.getElementById('btn-again').addEventListener('click', () => show('screen-setup'));
+  document.getElementById('btn-change').addEventListener('click', () => {
+    players = [];
+    renderPlayers();
+    document.getElementById('name-input').value = '';
+    show('screen-login');
+  });
+
+  // Workout logic — alternates players for each exercise slot
+  function startWorkout() {
+    workoutStartTime = Date.now();
+    runSequence(0, 0, 0);
+  }
+
+  function runSequence(roundIdx, exIdx, playerIdx) {
+    if (roundIdx >= totalRounds) return finishWorkout();
+
+    const player = players[playerIdx];
+    const color = getPlayerColor(playerIdx);
+    const exerciseName = exercises[exIdx];
+    const isFirst = roundIdx === 0 && exIdx === 0 && playerIdx === 0;
+    const label = isFirst ? 'היכון!' : `הבא: ${exerciseName}`;
+
+    showGetReady(label, player, color, 3, () => {
+      runTimer(roundIdx, exIdx, playerIdx, () => {
+        beep();
+        const nextPlayer = playerIdx + 1;
+        if (nextPlayer < players.length) {
+          runSequence(roundIdx, exIdx, nextPlayer);
+        } else {
+          const nextEx = exIdx + 1;
+          if (nextEx < exercises.length) {
+            runSequence(roundIdx, nextEx, 0);
+          } else {
+            runSequence(roundIdx + 1, 0, 0);
+          }
+        }
+      });
+    });
+  }
+
+  function showGetReady(label, player, color, seconds, cb) {
+    const playerEl = document.getElementById('getready-player');
+    playerEl.textContent = player;
+    playerEl.style.color = color;
+    document.getElementById('getready-label').textContent = label;
+    document.getElementById('getready-count').textContent = seconds;
+    show('screen-getready');
+    let s = seconds;
+    clearInterval(timerId);
+    timerId = setInterval(() => {
+      s--;
+      if (s <= 0) {
+        clearInterval(timerId);
+        cb();
+      } else {
+        document.getElementById('getready-count').textContent = s;
+      }
+    }, 1000);
+  }
+
+  function runTimer(roundIdx, exIdx, playerIdx, cb) {
+    const player = players[playerIdx];
+    const color = getPlayerColor(playerIdx);
+    show('screen-timer');
+    document.getElementById('timer-name').textContent = player;
+    document.getElementById('timer-name').style.color = color;
+    document.getElementById('player-color-bar').style.background = color;
+    document.getElementById('timer-round').textContent = `סבב ${roundIdx + 1} מתוך ${totalRounds}`;
+    document.getElementById('timer-exercise-progress').textContent =
+      players.length > 1
+        ? `תרגיל ${exIdx + 1} מתוך ${exercises.length} · שחקן ${playerIdx + 1} מתוך ${players.length}`
+        : `תרגיל ${exIdx + 1} מתוך ${exercises.length}`;
+    document.getElementById('timer-exercise').textContent = exercises[exIdx];
+
+    let remaining = roundDuration;
+    updateTimerUI(remaining);
+
+    clearInterval(timerId);
+    timerId = setInterval(() => {
+      remaining--;
+      updateTimerUI(remaining);
+      if (remaining <= 0) {
+        clearInterval(timerId);
+        cb();
+      }
+    }, 1000);
+  }
+
+  function updateTimerUI(sec) {
+    const el = document.getElementById('timer-display');
+    el.textContent = sec;
+    el.classList.toggle('warning', sec <= 5 && sec > 0);
+    const pct = ((roundDuration - sec) / roundDuration) * 100;
+    document.getElementById('progress-fill').style.width = pct + '%';
+  }
+
+  function finishWorkout() {
+    const elapsed = Math.round((Date.now() - workoutStartTime) / 1000);
+    const mins = Math.floor(elapsed / 60);
+    const secs = elapsed % 60;
+    const timeStr = mins > 0 ? `דק׳ ${mins} ו-${secs} שנ׳` : `${secs} שנ׳`;
+
+    const names = players.join(' ו-');
+    document.getElementById('done-msg').textContent = `כל הכבוד, ${names}!`;
+    document.getElementById('done-summary').innerHTML =
+      `שחקנים: ${players.length}<br>` +
+      `סבבים שהושלמו: ${totalRounds}<br>` +
+      `תרגילים בכל סבב: ${exercises.length}<br>` +
+      `זמן כולל: ${timeStr}`;
+    show('screen-done');
+    beep();
+  }
+</script>
+</body>
+</html>
